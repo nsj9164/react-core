@@ -1,17 +1,11 @@
-export function createElement(type, props, ...children) {
-  console.log(type, props, ...children);
-  const newProps = {
-    ...props,
-    children: children.length === 1 ? children[0] : children,
-  };
-
+export function createElement(type, props) {
   if (typeof type === "function") {
-    return type(newProps);
+    return type(props);
   }
 
   return {
     type,
     key: props?.key ?? null,
-    props: newProps,
+    props,
   };
 }

@@ -5,15 +5,10 @@ export default defineConfig({
   plugins: [
     react({
       babel: {
-        presets: [["@babel/preset-react", { runtime: "classic" }]],
-        plugins: [
+        presets: [
           [
-            "@babel/plugin-transform-react-jsx",
-            {
-              runtime: "classic",
-              pragma: "createElement",
-              pragmaFrag: "Fragment",
-            },
+            "@babel/preset-react",
+            { runtime: "automatic", importSource: "./utils" },
           ],
         ],
       },

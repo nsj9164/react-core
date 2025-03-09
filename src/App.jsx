@@ -1,5 +1,3 @@
-import { createElement } from "./utils/createElement";
-
 function Header() {
   return (
     <div className="header" onClick={() => console.log("This is the header!")}>

@@ -6,10 +6,20 @@ export default defineConfig({
     react({
       babel: {
         presets: [["@babel/preset-react", { runtime: "classic" }]],
+        plugins: [
+          [
+            "@babel/plugin-transform-react-jsx",
+            {
+              runtime: "classic",
+              pragma: "createElement",
+              pragmaFrag: "Fragment",
+            },
+          ],
+        ],
       },
     }),
   ],
   esbuild: {
-    jsxInject: `import React from 'react'`, // JSX 파일마다 자동으로 React import
+    jsxInject: `import React from 'react'`,
   },
 });

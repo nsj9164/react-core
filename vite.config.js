@@ -8,13 +8,10 @@ export default defineConfig({
         presets: [
           [
             "@babel/preset-react",
-            { runtime: "automatic", importSource: "./utils" },
+            { runtime: "automatic", importSource: "../lib" },
           ],
         ],
       },
     }),
   ],
-  esbuild: {
-    jsxInject: `import React from 'react'`,
-  },
 });

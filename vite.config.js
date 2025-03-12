@@ -5,10 +5,10 @@ export default defineConfig({
   plugins: [
     react({
       babel: {
-        presets: [
+        plugins: [
           [
-            "@babel/preset-react",
-            { runtime: "automatic", importSource: "../lib" },
+            "@babel/plugin-transform-react-jsx",
+            { runtime: "automatic", importSource: "./libs" },
           ],
         ],
       },

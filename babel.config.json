@@ -1,8 +1,12 @@
 {
-  "presets": [
+  "presets": ["@babel/preset-env"],
+  "plugins": [
     [
-      "@babel/preset-react",
-      { "runtime": "automatic", "importSource": "./utils" }
+      "@babel/plugin-transform-react-jsx",
+      {
+        "runtime": "automatic",
+        "importSource": "@/libs/jsx"
+      }
     ]
   ]
 }

@@ -5,16 +5,13 @@ export default defineConfig({
   plugins: [
     react({
       babel: {
-        presets: [
+        plugins: [
           [
-            "@babel/preset-react",
-            { runtime: "automatic", importSource: "./utils" },
+            "@babel/plugin-transform-react-jsx",
+            { runtime: "automatic", importSource: "./libs" },
           ],
         ],
       },
     }),
   ],
-  esbuild: {
-    jsxInject: `import React from 'react'`,
-  },
 });

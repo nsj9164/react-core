@@ -1,4 +1,5 @@
 export function render(vdom, container) {
+  console.log("@#", vdom, container);
   if (!vdom) return;
 
   const dom =

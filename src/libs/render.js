@@ -1,5 +1,4 @@
 export function render(vdom, container) {
-  console.log("@#", vdom, container);
   if (!vdom) return;
 
   const dom =
@@ -8,6 +7,8 @@ export function render(vdom, container) {
       : document.createElement(vdom.type);
 
   if (vdom.props) {
+    // 이벤트 핸들러인 경우 이벤트 리스너 추가
+    // 일반 props는 해당 요소에 적용
     Object.keys(vdom.props)
       .filter((key) => key != "children")
       .forEach((key) => {
@@ -18,12 +19,13 @@ export function render(vdom, container) {
         }
       });
 
+    // children 렌더링
     const children = vdom.props.children;
     if (children) {
-      if (Array.isArray(vdom.props.children)) {
-        vdom.props.children.forEach((child) => render(child, dom));
+      if (Array.isArray(children)) {
+        children.forEach((child) => render(child, dom));
       } else {
-        render(vdom.props.children, dom);
+        render(children, dom);
       }
     }
   }

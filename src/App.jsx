@@ -1,26 +1,27 @@
+import { useRef } from "react";
+import { useEffect } from "react";
 import { useState } from "./libs/useState";
 
 function App() {
-  const [toDos, setToDos] = useState([]);
-  const [toDo, setToDo] = useState("");
-  const [id, setId] = useState(1);
+  const [todoList, setTodoList] = useState([]);
+  const [todoItem, setTodoItem] = useState("");
 
   // 입력값 처리
   const handleChange = (event) => {
-    setToDo(event.target.value);
+    setTodoItem(event.target.value);
   };
 
   // toDo 추가
   const handleClick = () => {
-    const newToDo = { id: id, text: toDo, completed: false };
-    setToDos((prev) => [...prev, newToDo]);
-    setToDo("");
-    setId((id) => id + 1);
+    if (todoItem.trim() === "") return;
+    const newToDo = { id: Date.now(), text: todoItem, completed: false };
+    setTodoList((prev) => [...prev, newToDo]);
+    setTodoItem("");
   };
 
   // toDo 완료처리
   const handleToDo = (id) => {
-    setToDos((prev) =>
+    setTodoList((prev) =>
       prev.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
       )
@@ -29,21 +30,21 @@ function App() {
 
   // toDo 삭제
   const handleDelete = (id) => {
-    setToDos((prev) => prev.filter((todo) => todo.id !== id));
+    setTodoList((prev) => prev.filter((todo) => todo.id !== id));
   };
 
   return (
     <div>
       <h1>My ToDo</h1>
-      <input type="text" value={toDo} onChange={handleChange} />
+      <input type="text" value={todoItem} onChange={handleChange} />
       <button onClick={handleClick}>추가</button>
       <hr />
 
       <h5>📌 할 일 목록</h5>
-      {toDos
+      {todoList
         .filter((todo) => !todo.completed)
-        .map((todo, i) => (
-          <div key={i}>
+        .map((todo) => (
+          <div key={todo.id}>
             <input
               type="checkbox"
               checked={todo.completed}
@@ -56,10 +57,10 @@ function App() {
       <hr />
 
       <h5>📌 완료한 목록</h5>
-      {toDos
+      {todoList
         .filter((todo) => todo.completed)
         .map((todo, i) => (
-          <div key={i}>
+          <div key={todo.id}>
             <input
               type="checkbox"
               checked={todo.completed}

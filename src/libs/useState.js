@@ -4,20 +4,20 @@ import { render } from "./render";
 let stateStore = [];
 let stateIndex = 0;
 
-export function useState(initialState) {
+export function useState(initialValue) {
   const currentIndex = stateIndex;
 
   if (stateStore[currentIndex] === undefined) {
-    stateStore[currentIndex] = initialState;
+    stateStore[currentIndex] = initialValue;
   }
 
-  const setState = (newState) => {
-    if (typeof newState === "function") {
-      newState = newState(stateStore[currentIndex]);
+  const setState = (newValue) => {
+    if (typeof newValue === "function") {
+      newValue = newValue(stateStore[currentIndex]);
     }
 
-    if (stateStore[currentIndex] !== newState) {
-      stateStore[currentIndex] = newState;
+    if (stateStore[currentIndex] !== newValue) {
+      stateStore[currentIndex] = newValue;
 
       triggerRender();
     }

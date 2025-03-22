@@ -8,12 +8,18 @@ export function render(vdom, container) {
 
   if (vdom.props) {
     Object.keys(vdom.props)
-      .filter((key) => key != "children")
+      .filter((key) => key !== "children")
       .forEach((key) => {
         if (key.startsWith("on") && typeof vdom.props[key] === "function") {
-          // console.log("이벤트 핸들러 추가됨 -> key:", key);
-          dom.addEventListener(key.toLowerCase().substring(2), vdom.props[key]);
+          const eventType = key.toLowerCase().substring(2);
+
+          if (eventType === "change") {
+            dom.addEventListener("input", vdom.props[key]);
+          } else {
+            dom.addEventListener(eventType, vdom.props[key]);
+          }
         } else {
+          dom[key] = vdom.props[key];
         }
       });
 

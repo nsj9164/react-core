@@ -1,5 +1,3 @@
-import { useRef } from "react";
-import { useEffect } from "react";
 import { useState } from "./libs/useState";
 
 function App() {
@@ -32,7 +30,7 @@ function App() {
   const handleDelete = (id) => {
     setTodoList((prev) => prev.filter((todo) => todo.id !== id));
   };
-
+  //  onChange={handleChange}
   return (
     <div>
       <h1>My ToDo</h1>

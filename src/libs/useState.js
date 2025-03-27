@@ -1,8 +1,6 @@
-import App from "../App";
-import { render } from "./render";
-
 let stateStore = [];
 let stateIndex = 0;
+let rerenderCallback = null;
 
 export function useState(initialValue) {
   const currentIndex = stateIndex;
@@ -12,14 +10,13 @@ export function useState(initialValue) {
   }
 
   const setState = (newValue) => {
-    if (typeof newValue === "function") {
-      newValue = newValue(stateStore[currentIndex]);
-    }
+    const prevValue = stateStore[currentIndex];
+    const nextValue =
+      typeof newValue === "function" ? newValue(prevValue) : newValue;
 
-    if (stateStore[currentIndex] !== newValue) {
-      stateStore[currentIndex] = newValue;
-
-      triggerRender();
+    if (prevValue !== nextValue) {
+      stateStore[currentIndex] = nextValue;
+      rerenderCallback();
     }
   };
 
@@ -28,12 +25,12 @@ export function useState(initialValue) {
   return [stateStore[currentIndex], setState];
 }
 
-// 컴포넌트 리렌더링
-function triggerRender() {
-  stateIndex = 0;
-  const root = document.getElementById("root");
+// setState될 때 실행할 리렌더 함수
+export function injectRerender(callback) {
+  rerenderCallback = callback;
+}
 
-  root.innerHTML = "";
-  const virtualDOM = App();
-  render(virtualDOM, root);
+// stateIndex 초기화
+export function resetStateIndex() {
+  stateIndex = 0;
 }

@@ -1,3 +1,4 @@
+import { useEffect } from "./libs/useEffect";
 import { useState } from "./libs/useState";
 
 function App() {
@@ -30,7 +31,11 @@ function App() {
   const handleDelete = (id) => {
     setTodoList((prev) => prev.filter((todo) => todo.id !== id));
   };
-  //  onChange={handleChange}
+
+  useEffect(() => {
+    console.log("✅todoItem changed:", todoItem);
+  }, [todoItem]);
+
   return (
     <div>
       <h1>My ToDo</h1>
@@ -39,35 +44,17 @@ function App() {
       <hr />
 
       <h5>📌 할 일 목록</h5>
-      {todoList
-        .filter((todo) => !todo.completed)
-        .map((todo) => (
-          <div key={todo.id}>
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onClick={() => handleToDo(todo.id)}
-            />
-            {todo.text}
-            <button onClick={() => handleDelete(todo.id)}>삭제</button>
-          </div>
-        ))}
-      <hr />
-
-      <h5>📌 완료한 목록</h5>
-      {todoList
-        .filter((todo) => todo.completed)
-        .map((todo, i) => (
-          <div key={todo.id}>
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onClick={() => handleToDo(todo.id)}
-            />
-            {todo.text}
-            <button onClick={() => handleDelete(todo.id)}>삭제</button>
-          </div>
-        ))}
+      {todoList.map((todo) => (
+        <div key={todo.id}>
+          <input
+            type="checkbox"
+            checked={todo.completed}
+            onClick={() => handleToDo(todo.id)}
+          />
+          {todo.text}
+          <button onClick={() => handleDelete(todo.id)}>삭제</button>
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { createDom, mount } from "./render.js";
 
+// dom node update
 export function diff(oldVNode, newVNode, parent) {
+  console.log(parent);
   // 처음 렌더링일 경우
   if (!oldVNode) {
     mount(newVNode, parent);
@@ -27,7 +29,7 @@ export function diff(oldVNode, newVNode, parent) {
   const parentRoot = parent.firstChild;
   if (!parentRoot) return;
 
-  updateProps(parent.firstChild, oldVNode.props, newVNode.props);
+  updateProps(parentRoot, oldVNode.props, newVNode.props);
 
   const oldChildren = Array.isArray(oldVNode.props?.children)
     ? oldVNode.props.children
@@ -37,35 +39,72 @@ export function diff(oldVNode, newVNode, parent) {
     ? newVNode.props.children
     : [newVNode.props?.children].filter(Boolean);
 
-  oldChildren.forEach((oldChild, i) => {
-    const newChild = newChildren[i];
-    const childDom = parent.firstChild.childNodes[i];
+  // key 기반 비교
+  const oldKeyed = {};
+  const newKeyed = {};
 
-    if (!newChild) {
-      parent.firstChild.removeChild(childDom);
-    } else {
-      if (childDom) {
-        updateProps(childDom, oldChild.props, newChild.props);
-        diff(oldChild, newChild, childDom);
+  oldChildren.forEach((child, i) => {
+    const key = child?.props?.key;
+    if (key != null) oldKeyed[key] = { child, index: i };
+  });
+
+  newChildren.forEach((child, i) => {
+    const key = child?.props?.key;
+    if (key != null) newKeyed[key] = { child, index: i };
+  });
+
+  // REMOVE
+  Object.keys(oldKeyed).forEach((key) => {
+    if (!(key in newKeyed)) {
+      const { index } = oldKeyed[key];
+      const dom = parentRoot.childNodes[index];
+      if (dom) parentRoot.removeChild(dom);
+    }
+  });
+
+  // UPDATE
+  Object.keys(newKeyed).forEach((key) => {
+    if (key in oldKeyed) {
+      const oldChild = oldKeyed[key].child;
+      const newChild = newKeyed[key].child;
+      const dom = parentRoot.childNodes[oldKeyed[key].index];
+      if (dom) {
+        updateProps(dom, oldChild.props, newChild.props);
+        diff(oldChild, newChild, dom);
       }
     }
   });
 
+  // ADD
   newChildren.forEach((child, i) => {
-    if (!oldChildren[i]) {
-      parent.firstChild.appendChild(createDom(child));
-    } else {
-      diff(oldChildren[i], newChildren[i], parent.firstChild);
+    const key = child?.props?.key;
+    if (key != null && !(key in oldKeyed)) {
+      const newDom = createDom(child);
+      const refNode = parentRoot.childNodes[i] || null;
+      parentRoot.insertBefore(newDom, refNode);
+    }
+  });
+
+  // key 없는 자식은 인덱스 기반으로 updateProps 및 diff 적용
+  newChildren.forEach((newChild, i) => {
+    const oldChild = oldChildren[i];
+    const dom = parentRoot.childNodes[i];
+
+    const hasKey = newChild?.props?.key != null;
+
+    if (!hasKey && oldChild && dom) {
+      updateProps(dom, oldChild.props, newChild.props);
+      diff(oldChild, newChild, dom);
     }
   });
 }
 
-// 기존 DOM의 속성을 새로운 Virtual DOM의 속성과 비교하여 변경 부분 적용
+// dom props update
 function updateProps(dom, oldProps = {}, newProps = {}) {
   if (!dom) return;
+
   Object.keys(newProps).forEach((key) => {
     if (key === "children") return;
-
     if (oldProps[key] !== newProps[key]) {
       if (key === "value" && dom.tagName === "INPUT") {
         if (dom.value !== newProps[key]) {
@@ -76,12 +115,23 @@ function updateProps(dom, oldProps = {}, newProps = {}) {
         if (eventType === "change" && dom.tagName === "INPUT") {
           eventType = "input";
         }
+
+        // 기존 handler 제거 후 새로 바인딩 (이벤트 handler 최신으로 교체)
+        if (dom._handlers?.[eventType]) {
+          dom.removeEventListener(eventType, dom._handlers[eventType]);
+        }
+        dom._handlers = dom._handlers || {};
+        dom._handlers[eventType] = newProps[key];
+        dom.addEventListener(eventType, newProps[key]);
+
+        // 이벤트 위임 저장
         if (dom.vdom && dom.vdom.events) {
           dom.vdom.events[eventType] = newProps[key];
         }
-        // dom.addEventListener(eventType, newProps[key]);
       } else {
-        dom.setAttribute(key, newProps[key]);
+        if (dom.nodeType === 1) {
+          dom.setAttribute(key, newProps[key]);
+        }
       }
     }
   });

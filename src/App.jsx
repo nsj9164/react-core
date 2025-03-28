@@ -32,12 +32,17 @@ function App() {
     setTodoList((prev) => prev.filter((todo) => todo.id !== id));
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleClick();
+  };
+
   useEffect(() => {
     console.log("✅todoItem changed:", todoItem);
   }, [todoItem]);
 
   return (
-    <div>
+    <form onSubmit={handleSubmit}>
       <h1>My ToDo</h1>
       <input type="text" value={todoItem} onChange={handleChange} />
       <button onClick={handleClick}>추가</button>
@@ -55,7 +60,7 @@ function App() {
           <button onClick={() => handleDelete(todo.id)}>삭제</button>
         </div>
       ))}
-    </div>
+    </form>
   );
 }
 export default App;

@@ -31,13 +31,8 @@ export function diff(oldVNode, newVNode, parent) {
 
   updateProps(parentRoot, oldVNode.props, newVNode.props);
 
-  const oldChildren = Array.isArray(oldVNode.props?.children)
-    ? oldVNode.props.children
-    : [oldVNode.props?.children].filter(Boolean);
-
-  const newChildren = Array.isArray(newVNode.props?.children)
-    ? newVNode.props.children
-    : [newVNode.props?.children].filter(Boolean);
+  const oldChildren = normalizeChildren(oldVNode);
+  const newChildren = normalizeChildren(newVNode);
 
   // key 기반 비교
   const oldKeyed = {};
@@ -117,12 +112,16 @@ function updateProps(dom, oldProps = {}, newProps = {}) {
         }
 
         // 기존 handler 제거 후 새로 바인딩 (이벤트 handler 최신으로 교체)
-        if (dom._handlers?.[eventType]) {
-          dom.removeEventListener(eventType, dom._handlers[eventType]);
+        const prevHandler = dom._handlers[eventType];
+        const nextHandler = newProps[key];
+
+        if (prevHandler !== nextHandler) {
+          if (prevHandler) {
+            dom.removeEventListener(eventType, prevHandler);
+          }
+          dom._handlers[eventType] = nextHandler;
+          dom.addEventListener(eventType, nextHandler);
         }
-        dom._handlers = dom._handlers || {};
-        dom._handlers[eventType] = newProps[key];
-        dom.addEventListener(eventType, newProps[key]);
 
         // 이벤트 위임 저장
         if (dom.vdom && dom.vdom.events) {
@@ -141,4 +140,11 @@ function updateProps(dom, oldProps = {}, newProps = {}) {
       dom.removeAttribute(key);
     }
   });
+}
+
+function normalizeChildren(vnod) {
+  const children = Array.isArray(vnode.props?.children)
+    ? vnode.props.children
+    : [vnode.props?.children];
+  return children.filter((x) => x !== null);
 }

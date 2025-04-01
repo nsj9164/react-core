@@ -95,42 +95,32 @@ export function diff(oldVNode, newVNode, parent) {
 }
 
 // dom props update
-function updateProps(dom, oldProps = {}, newProps = {}) {
+export function updateProps(dom, oldProps = {}, newProps = {}) {
   if (!dom) return;
 
   Object.keys(newProps).forEach((key) => {
-    if (key === "children") return;
-    if (oldProps[key] !== newProps[key]) {
-      if (key === "value" && dom.tagName === "INPUT") {
-        if (dom.value !== newProps[key]) {
-          dom.value = newProps[key];
-        }
-      } else if (key.startsWith("on") && typeof newProps[key] === "function") {
-        let eventType = key.toLowerCase().substring(2);
-        if (eventType === "change" && dom.tagName === "INPUT") {
-          eventType = "input";
-        }
+    if (key === "children" || oldProps[key] === newProps[key]) return;
 
-        // 기존 handler 제거 후 새로 바인딩 (이벤트 handler 최신으로 교체)
-        const prevHandler = dom._handlers[eventType];
-        const nextHandler = newProps[key];
+    if (key === "value" && dom.tagName === "INPUT") {
+      if (dom.value !== newProps[key]) {
+        dom.value = newProps[key];
+      }
+    } else if (key.startsWith("on") && typeof newProps[key] === "function") {
+      let eventType = key.toLowerCase().substring(2);
+      if (eventType === "change" && dom.tagName === "INPUT") {
+        eventType = "input";
+      }
 
-        if (prevHandler !== nextHandler) {
-          if (prevHandler) {
-            dom.removeEventListener(eventType, prevHandler);
-          }
-          dom._handlers[eventType] = nextHandler;
-          dom.addEventListener(eventType, nextHandler);
-        }
+      // 기존 handler 제거 후 새로 바인딩 (이벤트 handler 최신으로 교체)
+      updateHandler(dom, eventType, newProps[key]);
 
-        // 이벤트 위임 저장
-        if (dom.vdom && dom.vdom.events) {
-          dom.vdom.events[eventType] = newProps[key];
-        }
-      } else {
-        if (dom.nodeType === 1) {
-          dom.setAttribute(key, newProps[key]);
-        }
+      // 이벤트 위임 저장
+      if (dom.vdom && dom.vdom.events) {
+        dom.vdom.events[eventType] = newProps[key];
+      }
+    } else {
+      if (dom.nodeType === 1) {
+        dom.setAttribute(key, newProps[key]);
       }
     }
   });
@@ -142,9 +132,22 @@ function updateProps(dom, oldProps = {}, newProps = {}) {
   });
 }
 
-function normalizeChildren(vnod) {
+export function normalizeChildren(vnode) {
   const children = Array.isArray(vnode.props?.children)
     ? vnode.props.children
     : [vnode.props?.children];
   return children.filter((x) => x !== null);
+}
+
+function updateHandler(dom, eventType, nextHandler) {
+  dom._handlers = dom._handlers || {};
+  const prevHandler = dom._handlers[eventType];
+
+  if (prevHandler === nextHandler) return;
+
+  if (prevHandler) {
+    dom.removeEventListener(eventType, prevHandler);
+  }
+  dom._handlers[eventType] = nextHandler;
+  dom.addEventListener(eventType, nextHandler);
 }

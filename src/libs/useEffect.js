@@ -1,7 +1,9 @@
-const effectStack = [];
+let pendingEffects = [];
+let hookIndex = 0;
 
 export function useEffect(callback, dependencies) {
-  const oldEffect = effectStack[effectStack.length - 1];
+  const currentIndex = hookIndex++;
+  const oldEffect = pendingEffects[pendingEffects.length - 1];
   let hasChanged = true;
 
   if (oldEffect) {
@@ -11,21 +13,27 @@ export function useEffect(callback, dependencies) {
   }
 
   if (hasChanged) {
-    if (oldEffect?.cleanup) {
-      oldEffect.cleanup();
-    }
-
-    const cleanup = callback();
-    // effectStack[effectStack.length - 1] = { dependencies, cleanup };
-    effectStack.push({ callback, dependencies, cleanup });
+    pendingEffects[currentIndex] = {
+      callback,
+      dependencies,
+      cleanup: oldEffect?.cleanup || null,
+    };
+  } else {
+    pendingEffects[currentIndex] = oldEffect;
   }
 }
 
-function runEffects() {
-  setTimeout(() => {
-    effectStack.forEach((effect) => {
-      if (effect.cleanup) effect.cleanup();
-      effect.cleanup = effect.callback();
-    });
+export function resetHookIndex() {
+  hookIndex = 0;
+}
+
+export function runEffects() {
+  pendingEffects.forEach((effect) => {
+    if (effect.cleanup) {
+      effect.cleanup();
+    }
+
+    const cleanup = effect.callback();
+    effect.cleanup = cleanup;
   });
 }

@@ -1,6 +1,7 @@
 import App from "../App.jsx";
 import { diff } from "./diff.js";
 import { initEventDelegation } from "./events.js";
+import { resetHookIndex, runEffects } from "./useEffect.js";
 import { injectRerender, resetStateIndex } from "./useState.js";
 
 let oldVNode = null;
@@ -19,6 +20,9 @@ export function render(vdom, container) {
   }
 
   oldVNode = vdom;
+
+  resetHookIndex();
+  runEffects();
 }
 
 // setState될 때 실행할 리렌더 함수

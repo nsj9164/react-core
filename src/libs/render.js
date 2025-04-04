@@ -1,5 +1,5 @@
 import App from "../App.jsx";
-import { diff } from "./diff.js";
+import { applyProps, diff } from "./diff.js";
 import { initEventDelegation } from "./events.js";
 import { resetHookIndex, runEffects } from "./useEffect.js";
 import { injectRerender, resetStateIndex } from "./useState.js";
@@ -43,6 +43,10 @@ function mount(vdom, container) {
 
 // Virtual DOM을 실제 DOM으로 변환하는 함수
 function createDom(vdom) {
+  if (vdom === false || vdom === null || vdom === undefined) {
+    return document.createTextNode(""); // React처럼 무시
+  }
+
   if (typeof vdom === "string" || typeof vdom === "number") {
     return document.createTextNode(vdom);
   }
@@ -52,21 +56,7 @@ function createDom(vdom) {
   vdom.events = {};
 
   if (vdom.props) {
-    Object.keys(vdom.props)
-      .filter((key) => key !== "children")
-      .forEach((key) => {
-        if (key.startsWith("on") && typeof vdom.props[key] === "function") {
-          let eventType = key.toLowerCase().substring(2);
-
-          if (eventType === "change" && vdom.type === "input") {
-            eventType = "input";
-          }
-
-          vdom.events[eventType] = vdom.props[key];
-        } else {
-          dom[key] = vdom.props[key];
-        }
-      });
+    applyProps(dom, {}, vdom.props, vdom);
   } else {
     vdom.events = {};
   }

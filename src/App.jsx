@@ -37,9 +37,22 @@ function App() {
     handleClick();
   };
 
+  console.log("🔥 render: todoItem =", todoItem);
   useEffect(() => {
     console.log("✅todoItem changed:", todoItem);
+
+    return () => {
+      console.log("🧹 cleanup: ✅todoItem :", todoItem);
+    };
   }, [todoItem]);
+
+  useEffect(() => {
+    console.log("✅todoList changed:", todoList);
+
+    return () => {
+      console.log("🧹 cleanup: ✅todoList :", todoList);
+    };
+  }, [todoList]);
 
   return (
     <form onSubmit={handleSubmit}>

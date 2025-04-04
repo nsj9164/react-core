@@ -2,7 +2,7 @@ import { createDom, mount } from "./render.js";
 
 // dom node update
 export function diff(oldVNode, newVNode, parent) {
-  console.log(parent);
+  // console.log(parent);
   // 처음 렌더링일 경우
   if (!oldVNode) {
     mount(newVNode, parent);
@@ -97,13 +97,40 @@ export function diff(oldVNode, newVNode, parent) {
 // dom props update
 export function updateProps(dom, oldProps = {}, newProps = {}) {
   if (!dom) return;
+  applyProps(dom, oldProps, newProps, dom.vdom);
+}
 
+export function normalizeChildren(vnode) {
+  const children = Array.isArray(vnode.props?.children)
+    ? vnode.props.children
+    : [vnode.props?.children];
+  return children.filter((x) => x !== false && x !== null && x !== undefined);
+}
+
+function updateHandler(dom, eventType, nextHandler) {
+  dom._handlers = dom._handlers || {};
+  const prevHandler = dom._handlers[eventType];
+
+  if (prevHandler === nextHandler) return;
+
+  if (prevHandler) {
+    dom.removeEventListener(eventType, prevHandler);
+  }
+  dom._handlers[eventType] = nextHandler;
+  dom.addEventListener(eventType, nextHandler);
+}
+
+export function applyProps(dom, oldProps = {}, newProps = {}, vdom = null) {
   Object.keys(newProps).forEach((key) => {
     if (key === "children" || oldProps[key] === newProps[key]) return;
 
     if (key === "value" && dom.tagName === "INPUT") {
       if (dom.value !== newProps[key]) {
         dom.value = newProps[key];
+      }
+    } else if (key === "checked" && dom.tagName === "INPUT") {
+      if (dom.checked !== newProps[key]) {
+        dom.checked = newProps[key];
       }
     } else if (key.startsWith("on") && typeof newProps[key] === "function") {
       let eventType = key.toLowerCase().substring(2);
@@ -130,24 +157,4 @@ export function updateProps(dom, oldProps = {}, newProps = {}) {
       dom.removeAttribute(key);
     }
   });
-}
-
-export function normalizeChildren(vnode) {
-  const children = Array.isArray(vnode.props?.children)
-    ? vnode.props.children
-    : [vnode.props?.children];
-  return children.filter((x) => x !== null);
-}
-
-function updateHandler(dom, eventType, nextHandler) {
-  dom._handlers = dom._handlers || {};
-  const prevHandler = dom._handlers[eventType];
-
-  if (prevHandler === nextHandler) return;
-
-  if (prevHandler) {
-    dom.removeEventListener(eventType, prevHandler);
-  }
-  dom._handlers[eventType] = nextHandler;
-  dom.addEventListener(eventType, nextHandler);
 }

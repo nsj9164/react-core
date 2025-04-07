@@ -1,38 +1,72 @@
+import App from "../App.jsx";
+import { applyProps, diff } from "./diff.js";
+import { initEventDelegation } from "./events.js";
+import { resetHookIndex, runEffects } from "./useEffect.js";
+import { injectRerender, resetStateIndex } from "./useState.js";
+
+let oldVNode = null;
+let rootContainer = null;
+
 export function render(vdom, container) {
-  if (!vdom) return;
+  rootContainer = container;
 
-  const dom =
-    typeof vdom === "string" || typeof vdom === "number"
-      ? document.createTextNode(vdom)
-      : document.createElement(vdom.type);
+  resetStateIndex();
 
-  if (vdom.props) {
-    Object.keys(vdom.props)
-      .filter((key) => key !== "children")
-      .forEach((key) => {
-        if (key.startsWith("on") && typeof vdom.props[key] === "function") {
-          const eventType = key.toLowerCase().substring(2);
-
-          if (eventType === "change") {
-            dom.addEventListener("input", vdom.props[key]);
-          } else {
-            dom.addEventListener(eventType, vdom.props[key]);
-          }
-        } else {
-          dom[key] = vdom.props[key];
-        }
-      });
-
-    // children 렌더링
-    const children = vdom.props.children;
-    if (!children) return container.appendChild(dom);
-
-    if (Array.isArray(children)) {
-      children.forEach((child) => render(child, dom));
-    } else {
-      render(children, dom);
-    }
+  if (!oldVNode) {
+    container.innerHTML = "";
+    mount(vdom, container);
+  } else {
+    diff(oldVNode, vdom, container);
   }
 
+  oldVNode = vdom;
+
+  resetHookIndex();
+  runEffects();
+}
+
+// setState될 때 실행할 리렌더 함수
+injectRerender(() => {
+  if (!rootContainer) return;
+
+  const newVdom = App();
+  render(newVdom, rootContainer);
+});
+
+initEventDelegation();
+
+// Virtual DOM을 실제 DOM에 mount
+function mount(vdom, container) {
+  const dom = createDom(vdom);
   container.appendChild(dom);
 }
+
+// Virtual DOM을 실제 DOM으로 변환하는 함수
+function createDom(vdom) {
+  if (vdom === false || vdom === null || vdom === undefined) {
+    return document.createTextNode(""); // React처럼 무시
+  }
+
+  if (typeof vdom === "string" || typeof vdom === "number") {
+    return document.createTextNode(vdom);
+  }
+
+  const dom = document.createElement(vdom.type);
+  dom.vdom = vdom;
+  vdom.events = {};
+
+  if (vdom.props) {
+    applyProps(dom, {}, vdom.props, vdom);
+  } else {
+    vdom.events = {};
+  }
+
+  const children = vdom.props?.children || [];
+  (Array.isArray(children) ? children : [children]).forEach((child) =>
+    mount(child, dom)
+  );
+
+  return dom;
+}
+
+export { mount, createDom };
